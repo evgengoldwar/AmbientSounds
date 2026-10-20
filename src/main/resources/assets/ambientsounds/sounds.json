@@ -1,0 +1,540 @@
+{
+  "ambient.bird": {
+    "category": "ambient",
+    "sounds": [
+      "ambientsounds:ambient/bird/descending1",
+      "ambientsounds:ambient/bird/descending2",
+      "ambientsounds:ambient/bird/trill1",
+      "ambientsounds:ambient/bird/trill2",
+      "ambientsounds:ambient/bird/feebee1",
+      "ambientsounds:ambient/bird/feebee2",
+      "ambientsounds:ambient/bird/warble1",
+      "ambientsounds:ambient/bird/warble2",
+      "ambientsounds:ambient/bird/chirps1",
+      "ambientsounds:ambient/bird/chirps2",
+      "ambientsounds:ambient/bird/robin1",
+      "ambientsounds:ambient/bird/robin2"
+    ]
+  },
+  "ambient.cave_rumble": {
+    "category": "ambient",
+    "sounds": [
+      "ambientsounds:ambient/cave/rumble1",
+      "ambientsounds:ambient/cave/rumble2"
+    ]
+  },
+  "ambient.dove": {
+    "category": "ambient",
+    "sounds": [
+      "ambientsounds:ambient/bird/dove1",
+      "ambientsounds:ambient/bird/dove2"
+    ]
+  },
+  "ambient.drip": {
+    "category": "ambient",
+    "sounds": [
+      "ambientsounds:ambient/cave/drip1",
+      "ambientsounds:ambient/cave/drip2",
+      "ambientsounds:ambient/cave/drip3",
+      "ambientsounds:ambient/cave/drip4",
+      "ambientsounds:ambient/cave/drip5",
+      "ambientsounds:ambient/cave/drip6"
+    ]
+  },
+  "ambient.end_shimmer": {
+    "category": "ambient",
+    "sounds": [
+      "ambientsounds:ambient/end/shimmer1",
+      "ambientsounds:ambient/end/shimmer2",
+      "ambientsounds:ambient/end/shimmer3"
+    ]
+  },
+  "ambient.lava_pop": {
+    "category": "ambient",
+    "sounds": [
+      "ambientsounds:ambient/nether/lava1",
+      "ambientsounds:ambient/nether/lava2",
+      "ambientsounds:ambient/nether/lava3",
+      "ambientsounds:ambient/nether/lava4"
+    ]
+  },
+  "ambient.leaves_gust": {
+    "category": "ambient",
+    "sounds": [
+      "ambientsounds:ambient/wind/leaves1",
+      "ambientsounds:ambient/wind/leaves2",
+      "ambientsounds:ambient/wind/leaves3"
+    ]
+  },
+  "ambient.loop.cave": {
+    "category": "ambient",
+    "sounds": [
+      {
+        "name": "ambientsounds:ambient/loop/cave",
+        "stream": true
+      }
+    ]
+  },
+  "ambient.loop.desert": {
+    "category": "ambient",
+    "sounds": [
+      {
+        "name": "ambientsounds:ambient/loop/desert",
+        "stream": true
+      }
+    ]
+  },
+  "ambient.loop.end": {
+    "category": "ambient",
+    "sounds": [
+      {
+        "name": "ambientsounds:ambient/loop/end",
+        "stream": true
+      }
+    ]
+  },
+  "ambient.loop.forest": {
+    "category": "ambient",
+    "sounds": [
+      {
+        "name": "ambientsounds:ambient/loop/forest",
+        "stream": true
+      }
+    ]
+  },
+  "ambient.loop.jungle": {
+    "category": "ambient",
+    "sounds": [
+      {
+        "name": "ambientsounds:ambient/loop/jungle",
+        "stream": true
+      }
+    ]
+  },
+  "ambient.loop.mountain": {
+    "category": "ambient",
+    "sounds": [
+      {
+        "name": "ambientsounds:ambient/loop/mountain",
+        "stream": true
+      }
+    ]
+  },
+  "ambient.loop.nether": {
+    "category": "ambient",
+    "sounds": [
+      {
+        "name": "ambientsounds:ambient/loop/nether",
+        "stream": true
+      }
+    ]
+  },
+  "ambient.loop.night": {
+    "category": "ambient",
+    "sounds": [
+      {
+        "name": "ambientsounds:ambient/loop/night",
+        "stream": true
+      }
+    ]
+  },
+  "ambient.loop.ocean": {
+    "category": "ambient",
+    "sounds": [
+      {
+        "name": "ambientsounds:ambient/loop/ocean",
+        "stream": true
+      }
+    ]
+  },
+  "ambient.loop.plains": {
+    "category": "ambient",
+    "sounds": [
+      {
+        "name": "ambientsounds:ambient/loop/plains",
+        "stream": true
+      }
+    ]
+  },
+  "ambient.loop.snow": {
+    "category": "ambient",
+    "sounds": [
+      {
+        "name": "ambientsounds:ambient/loop/snow",
+        "stream": true
+      }
+    ]
+  },
+  "ambient.loop.swamp": {
+    "category": "ambient",
+    "sounds": [
+      {
+        "name": "ambientsounds:ambient/loop/swamp",
+        "stream": true
+      }
+    ]
+  },
+  "ambient.loop.underwater": {
+    "category": "ambient",
+    "sounds": [
+      {
+        "name": "ambientsounds:ambient/loop/underwater",
+        "stream": true
+      }
+    ]
+  },
+  "ambient.nether_rumble": {
+    "category": "ambient",
+    "sounds": [
+      "ambientsounds:ambient/nether/rumble1",
+      "ambientsounds:ambient/nether/rumble2"
+    ]
+  },
+  "ambient.owl": {
+    "category": "ambient",
+    "sounds": [
+      "ambientsounds:ambient/owl1",
+      "ambientsounds:ambient/owl2"
+    ]
+  },
+  "ambient.wind_gust": {
+    "category": "ambient",
+    "sounds": [
+      "ambientsounds:ambient/wind/gust1",
+      "ambientsounds:ambient/wind/gust2",
+      "ambientsounds:ambient/wind/gust3"
+    ]
+  },
+  "ambient.woodpecker": {
+    "category": "ambient",
+    "sounds": [
+      "ambientsounds:ambient/woodpecker1",
+      "ambientsounds:ambient/woodpecker2"
+    ]
+  },
+  "armor.chain": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:armor/chain1",
+      "ambientsounds:armor/chain2",
+      "ambientsounds:armor/chain3",
+      "ambientsounds:armor/chain4"
+    ]
+  },
+  "armor.leather": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:armor/leather1",
+      "ambientsounds:armor/leather2",
+      "ambientsounds:armor/leather3",
+      "ambientsounds:armor/leather4"
+    ]
+  },
+  "armor.plate": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:armor/plate1",
+      "ambientsounds:armor/plate2",
+      "ambientsounds:armor/plate3",
+      "ambientsounds:armor/plate4"
+    ]
+  },
+  "equip.bow": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:equip/bow1",
+      "ambientsounds:equip/bow2",
+      "ambientsounds:equip/bow3"
+    ]
+  },
+  "equip.generic": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:equip/generic1",
+      "ambientsounds:equip/generic2",
+      "ambientsounds:equip/generic3"
+    ]
+  },
+  "equip.heavy": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:equip/heavy1",
+      "ambientsounds:equip/heavy2",
+      "ambientsounds:equip/heavy3"
+    ]
+  },
+  "equip.sword": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:equip/sword1",
+      "ambientsounds:equip/sword2",
+      "ambientsounds:equip/sword3",
+      "ambientsounds:equip/sword4"
+    ]
+  },
+  "equip.tool": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:equip/tool1",
+      "ambientsounds:equip/tool2",
+      "ambientsounds:equip/tool3"
+    ]
+  },
+  "footstep.cloth": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:footstep/cloth1",
+      "ambientsounds:footstep/cloth2",
+      "ambientsounds:footstep/cloth3",
+      "ambientsounds:footstep/cloth4",
+      "ambientsounds:footstep/cloth5",
+      "ambientsounds:footstep/cloth6"
+    ]
+  },
+  "footstep.dirt": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:footstep/dirt1",
+      "ambientsounds:footstep/dirt2",
+      "ambientsounds:footstep/dirt3",
+      "ambientsounds:footstep/dirt4",
+      "ambientsounds:footstep/dirt5",
+      "ambientsounds:footstep/dirt6"
+    ]
+  },
+  "footstep.glass": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:footstep/glass1",
+      "ambientsounds:footstep/glass2",
+      "ambientsounds:footstep/glass3",
+      "ambientsounds:footstep/glass4",
+      "ambientsounds:footstep/glass5",
+      "ambientsounds:footstep/glass6"
+    ]
+  },
+  "footstep.grass": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:footstep/grass1",
+      "ambientsounds:footstep/grass2",
+      "ambientsounds:footstep/grass3",
+      "ambientsounds:footstep/grass4",
+      "ambientsounds:footstep/grass5",
+      "ambientsounds:footstep/grass6"
+    ]
+  },
+  "footstep.gravel": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:footstep/gravel1",
+      "ambientsounds:footstep/gravel2",
+      "ambientsounds:footstep/gravel3",
+      "ambientsounds:footstep/gravel4",
+      "ambientsounds:footstep/gravel5",
+      "ambientsounds:footstep/gravel6"
+    ]
+  },
+  "footstep.leaves": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:footstep/leaves1",
+      "ambientsounds:footstep/leaves2",
+      "ambientsounds:footstep/leaves3",
+      "ambientsounds:footstep/leaves4",
+      "ambientsounds:footstep/leaves5",
+      "ambientsounds:footstep/leaves6"
+    ]
+  },
+  "footstep.metal": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:footstep/metal1",
+      "ambientsounds:footstep/metal2",
+      "ambientsounds:footstep/metal3",
+      "ambientsounds:footstep/metal4",
+      "ambientsounds:footstep/metal5",
+      "ambientsounds:footstep/metal6"
+    ]
+  },
+  "footstep.sand": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:footstep/sand1",
+      "ambientsounds:footstep/sand2",
+      "ambientsounds:footstep/sand3",
+      "ambientsounds:footstep/sand4",
+      "ambientsounds:footstep/sand5",
+      "ambientsounds:footstep/sand6"
+    ]
+  },
+  "footstep.snow": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:footstep/snow1",
+      "ambientsounds:footstep/snow2",
+      "ambientsounds:footstep/snow3",
+      "ambientsounds:footstep/snow4",
+      "ambientsounds:footstep/snow5",
+      "ambientsounds:footstep/snow6"
+    ]
+  },
+  "footstep.stone": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:footstep/stone1",
+      "ambientsounds:footstep/stone2",
+      "ambientsounds:footstep/stone3",
+      "ambientsounds:footstep/stone4",
+      "ambientsounds:footstep/stone5",
+      "ambientsounds:footstep/stone6"
+    ]
+  },
+  "footstep.wade": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:footstep/wade1",
+      "ambientsounds:footstep/wade2",
+      "ambientsounds:footstep/wade3",
+      "ambientsounds:footstep/wade4",
+      "ambientsounds:footstep/wade5",
+      "ambientsounds:footstep/wade6"
+    ]
+  },
+  "footstep.wood": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:footstep/wood1",
+      "ambientsounds:footstep/wood2",
+      "ambientsounds:footstep/wood3",
+      "ambientsounds:footstep/wood4",
+      "ambientsounds:footstep/wood5",
+      "ambientsounds:footstep/wood6"
+    ]
+  },
+  "inventory.cloth": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:inventory/cloth1",
+      "ambientsounds:inventory/cloth2",
+      "ambientsounds:inventory/cloth3",
+      "ambientsounds:inventory/cloth4"
+    ]
+  },
+  "inventory.dust": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:inventory/dust1",
+      "ambientsounds:inventory/dust2",
+      "ambientsounds:inventory/dust3",
+      "ambientsounds:inventory/dust4"
+    ]
+  },
+  "inventory.food": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:inventory/food1",
+      "ambientsounds:inventory/food2",
+      "ambientsounds:inventory/food3",
+      "ambientsounds:inventory/food4"
+    ]
+  },
+  "inventory.gem": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:inventory/gem1",
+      "ambientsounds:inventory/gem2",
+      "ambientsounds:inventory/gem3",
+      "ambientsounds:inventory/gem4"
+    ]
+  },
+  "inventory.generic": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:inventory/generic1",
+      "ambientsounds:inventory/generic2",
+      "ambientsounds:inventory/generic3",
+      "ambientsounds:inventory/generic4"
+    ]
+  },
+  "inventory.glass": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:inventory/glass1",
+      "ambientsounds:inventory/glass2",
+      "ambientsounds:inventory/glass3",
+      "ambientsounds:inventory/glass4"
+    ]
+  },
+  "inventory.liquid": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:inventory/liquid1",
+      "ambientsounds:inventory/liquid2",
+      "ambientsounds:inventory/liquid3",
+      "ambientsounds:inventory/liquid4"
+    ]
+  },
+  "inventory.metal": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:inventory/metal1",
+      "ambientsounds:inventory/metal2",
+      "ambientsounds:inventory/metal3",
+      "ambientsounds:inventory/metal4"
+    ]
+  },
+  "inventory.paper": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:inventory/paper1",
+      "ambientsounds:inventory/paper2",
+      "ambientsounds:inventory/paper3",
+      "ambientsounds:inventory/paper4"
+    ]
+  },
+  "inventory.stone": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:inventory/stone1",
+      "ambientsounds:inventory/stone2",
+      "ambientsounds:inventory/stone3",
+      "ambientsounds:inventory/stone4"
+    ]
+  },
+  "inventory.wood": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:inventory/wood1",
+      "ambientsounds:inventory/wood2",
+      "ambientsounds:inventory/wood3",
+      "ambientsounds:inventory/wood4"
+    ]
+  },
+  "movement.jump": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:movement/jump1",
+      "ambientsounds:movement/jump2",
+      "ambientsounds:movement/jump3",
+      "ambientsounds:movement/jump4"
+    ]
+  },
+  "movement.land": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:movement/land1",
+      "ambientsounds:movement/land2",
+      "ambientsounds:movement/land3",
+      "ambientsounds:movement/land4"
+    ]
+  },
+  "movement.land_hard": {
+    "category": "player",
+    "sounds": [
+      "ambientsounds:movement/land_hard1",
+      "ambientsounds:movement/land_hard2",
+      "ambientsounds:movement/land_hard3"
+    ]
+  }
+}

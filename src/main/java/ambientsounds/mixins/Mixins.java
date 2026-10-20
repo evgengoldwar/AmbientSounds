@@ -1,15 +1,14 @@
 package ambientsounds.mixins;
 
+import javax.annotation.Nonnull;
+
 import com.gtnewhorizon.gtnhmixins.builders.IMixins;
 import com.gtnewhorizon.gtnhmixins.builders.MixinBuilder;
 
-import javax.annotation.Nonnull;
-
 public enum Mixins implements IMixins {
 
-    EXAMPLE(new MixinBuilder()
-        .setPhase(Phase.EARLY)
-        .addClientMixins("MixinMinecraft_Example"));
+    INVENTORY_CLICK_SOUNDS(new MixinBuilder().setPhase(Phase.EARLY)
+        .addClientMixins("MixinGuiContainer", "MixinGuiContainerCreative"));
 
     private final MixinBuilder builder;
 
