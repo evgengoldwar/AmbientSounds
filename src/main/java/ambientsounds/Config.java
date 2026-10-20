@@ -10,16 +10,18 @@ public class Config {
     private static final String CAT_FOOTSTEPS = "footsteps";
     private static final String CAT_EQUIP = "equip";
     private static final String CAT_INVENTORY = "inventory";
+    /** Bump when defaults change in a way old config files must not keep. */
+    private static final int CONFIG_VERSION = 2;
 
     // ambient
     public static boolean ambientEnabled = true;
     public static float ambientVolume = 1.0f;
     public static float ambientEventFrequency = 1.0f;
-    public static int maxAmbientLoops = 4;
+    public static int maxAmbientLoops = 3;
 
     // footsteps, jumping and landing
     public static boolean footstepsEnabled = true;
-    public static boolean replaceVanillaFootsteps = true;
+    public static boolean customFootsteps = false;
     public static float footstepVolume = 1.0f;
     public static boolean armorSounds = true;
     public static float armorVolume = 1.0f;
@@ -36,6 +38,14 @@ public class Config {
 
     public static void synchronizeConfiguration(File configFile) {
         Configuration configuration = new Configuration(configFile);
+        if (configuration.get(Configuration.CATEGORY_GENERAL, "configVersion", 0)
+            .getInt() < CONFIG_VERSION && configFile.exists()) {
+            // defaults of an older version were too loud / replaced vanilla steps: start from a fresh file
+            configFile.delete();
+            configuration = new Configuration(configFile);
+        }
+        configuration.get(Configuration.CATEGORY_GENERAL, "configVersion", CONFIG_VERSION, "Do not edit.")
+            .set(CONFIG_VERSION);
 
         configuration.setCategoryComment(CAT_AMBIENT, "Biome, weather, time of day and cave ambience.");
         ambientEnabled = configuration.getBoolean("enabled", CAT_AMBIENT, ambientEnabled, "Play ambient sounds.");
@@ -58,12 +68,13 @@ public class Config {
 
         configuration.setCategoryComment(CAT_FOOTSTEPS, "Material aware footsteps, armor rustle, jumping and landing.");
         footstepsEnabled = configuration
-            .getBoolean("enabled", CAT_FOOTSTEPS, footstepsEnabled, "Play the mod's footstep sounds.");
-        replaceVanillaFootsteps = configuration.getBoolean(
-            "replaceVanilla",
+            .getBoolean("enabled", CAT_FOOTSTEPS, footstepsEnabled, "Play the mod's footstep layers.");
+        customFootsteps = configuration.getBoolean(
+            "customSteps",
             CAT_FOOTSTEPS,
-            replaceVanillaFootsteps,
-            "Mute vanilla step sounds of your own player while the mod's footsteps are enabled.");
+            customFootsteps,
+            "Replace the vanilla step sounds of your own player with the mod's synthesized material steps. "
+                + "When false, vanilla steps play and the mod only adds armor, foliage, water, jump and landing layers.");
         footstepVolume = configuration
             .getFloat("volume", CAT_FOOTSTEPS, footstepVolume, 0.0f, 2.0f, "Footstep volume multiplier.");
         armorSounds = configuration

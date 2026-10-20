@@ -6,18 +6,17 @@ Client-side Minecraft 1.7.10 (Forge) mod that adds calm, immersive sound to the 
 
 **Ambience** (vanilla *Ambient/Environment* slider)
 - Seamless, crossfading ambience layers picked from the biomes around you (sampled on a grid, so biome borders blend):
-  plains breeze, forest leaves, night crickets, jungle insects, swamp frogs, ocean surf, desert wind, cold snow wind,
-  high mountain wind, cave drone, Nether rumble, End drone and an underwater layer.
+  plains breeze, forest leaves, distant night crickets, jungle insects, swamp, ocean surf, desert wind, snow wind,
+  mountain wind, a faint cave draft, soft Nether fire, a quiet End hush and an underwater layer.
 - Time of day, rain, altitude and being indoors are taken into account (indoors the outside is only faintly heard).
-- Random events: several kinds of bird songs, doves, woodpeckers, owls at night, wind and leaf gusts, cave water
-  drips and distant rumbles, lava bubbles in the Nether, soft shimmers in the End.
+- Occasional events: bird calls and a woodpecker by day, water drips in caves, lava bubbles in the Nether.
 
 **Movement** (vanilla *Players* slider)
-- Material-aware footsteps: grass, dirt, gravel, stone, wood, sand, snow, metal, glass, cloth, leaves, shallow water.
-  Works with modded blocks through their step sound type and material.
-- Brushing through tall grass/plants, armor rustle (leather creak, chainmail jingle, plate clank).
-- Jump and landing sounds (landing gets heavier with the fall height).
-- Vanilla footsteps of your own player are muted by default so steps are not doubled (`replaceVanilla`).
+- Vanilla footsteps stay (they are real recordings) and get extra layers: brushing through tall grass/plants,
+  wading in shallow water, armor rustle (leather creak, chainmail jingle, plate clank).
+- Jump and landing sounds using the floor block's own step sound (landing gets firmer with the fall height).
+- Optional (`customSteps=true`): replace vanilla steps with the mod's synthesized material steps (grass, dirt,
+  gravel, stone, wood, sand, snow, metal, glass, cloth, leaves), also for modded blocks.
 
 **Item sounds** (vanilla *Players* slider)
 - Weapon/tool swap: sword draw, axe/hammer, tools, bow, and a soft sound for other items.

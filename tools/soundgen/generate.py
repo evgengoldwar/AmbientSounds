@@ -82,27 +82,14 @@ def wind_bed(n, base_fc, range_oct, gust_hz=0.12, intensity=0.7, floor=0.3, colo
     return filter_bank_wind(n, centers, 0.45, fc, amp, color), g
 
 
-def c_crackle(n, rate, lo, hi, amp_sigma=0.5):
-    """Sparse random impulses (density follows rate, in events/s) shaped into tiny band-limited grains."""
-    mask = R().uniform(0, 1, n) < rate / SR
-    imp = np.zeros(n)
-    k = int(mask.sum())
-    imp[mask] = R().lognormal(0, amp_sigma, k) * R().choice([-1.0, 1.0], k)
-    return c_filter(imp, h_bandpass(lo, hi, 2))
-
-
 def leaves_rustle(n, gust, level=1.0):
-    """Leaves: thousands of tiny crackles whose density follows the gusts, over a soft hiss."""
+    """Leaves: soft band-limited noise that swells with the gusts and flutters gently (no clicks)."""
     out = np.zeros((n, 2))
     for c in range(2):
-        flutter = 0.5 + 0.5 * c_curve(n, 9.0, min_hz=2.0, smooth=0.7)
-        rate = (150 + 3500 * gust ** 1.5) * flutter
-        crackle = c_crackle(n, rate, 900, 5500)
-        crackle /= np.std(crackle) + 1e-9
-        hiss = c_filter(c_noise(n, "pink"), h_bandpass(800, 4500, 2))
-        hiss *= (0.05 + 0.95 * gust ** 1.5) * flutter
-        hiss /= np.std(hiss) + 1e-9
-        out[:, c] = crackle + 0.45 * hiss
+        flutter = 0.7 + 0.3 * c_curve(n, 4.0, min_hz=0.8, smooth=1.0)
+        hiss = c_filter(c_noise(n, "pink"), h_bandpass(700, 3800, 2))
+        hiss *= (0.08 + 0.92 * gust ** 1.5) * flutter
+        out[:, c] = hiss / (np.std(hiss) + 1e-9)
     return out * level * 0.5
 
 
@@ -145,22 +132,16 @@ def cricket_track(n, freq, period, amp, pulses, pulse_len, pulse_gap, distance):
 
 def loop_night(n):
     out = np.zeros((n, 2))
-    # a handful of nearby crickets...
-    for _ in range(6):
-        trk = cricket_track(n, R().uniform(3900, 4900), R().uniform(0.55, 1.15), R().uniform(0.35, 1.0),
-                            int(R().integers(2, 5)), R().uniform(0.010, 0.016), R().uniform(0.008, 0.014),
-                            R().uniform(0.0, 0.5))
-        out += pan(trk, R().uniform(-0.85, 0.85))
-    # ...and a soft distant chorus
-    for _ in range(14):
-        trk = cricket_track(n, R().uniform(3600, 5200), R().uniform(0.4, 1.3), R().uniform(0.08, 0.2),
-                            int(R().integers(2, 5)), R().uniform(0.010, 0.016), R().uniform(0.008, 0.014),
-                            R().uniform(0.6, 1.0))
-        out += pan(trk, R().uniform(-1, 1))
+    # only distant, softened crickets: a calm background, never piercing
+    for _ in range(12):
+        trk = cricket_track(n, R().uniform(3600, 4600), R().uniform(0.8, 1.6), R().uniform(0.15, 0.4),
+                            int(R().integers(2, 4)), R().uniform(0.010, 0.014), R().uniform(0.010, 0.014),
+                            R().uniform(0.5, 0.9))
+        out += pan(trk, R().uniform(-0.9, 0.9))
     ir = outdoor_ir()
-    out = np.stack([out[:, c] + 0.35 * c_reverb(out[:, c], ir[:, c]) for c in range(2)], axis=1)
-    breeze, _ = wind_bed(n, 130, 1.0, gust_hz=0.07, intensity=0.3, floor=0.25, color="brown")
-    return out + breeze * 0.35 * np.std(out) / (np.std(breeze) + 1e-9)
+    out = np.stack([out[:, c] + 0.25 * c_reverb(out[:, c], ir[:, c]) for c in range(2)], axis=1)
+    breeze, _ = wind_bed(n, 130, 1.0, gust_hz=0.07, intensity=0.3, floor=0.3, color="brown")
+    return out + breeze * 0.6 * np.std(out) / (np.std(breeze) + 1e-9)
 
 
 def loop_jungle(n):
@@ -185,50 +166,14 @@ def loop_jungle(n):
     return out + bed * 0.9 * np.std(out) / (np.std(bed) + 1e-9)
 
 
-def frog_croak(f0, formant, dur, pulse_rate):
-    nn = n_of(dur)
-    t = t_axis(nn)
-    # glottal like pulse train -> formant resonances
-    rate = pulse_rate * (1 + 0.15 * np.sin(np.pi * t / dur))
-    phase = np.cumsum(rate) / SR
-    pulses = (np.diff(np.floor(phase), prepend=0) > 0).astype(float)
-    src = lp(pulses, 4000, 1) + 0.02 * white(nn)
-    voice = resonator(src, formant, 4) + 0.6 * resonator(src, formant * 2.1, 6) + 0.4 * resonator(src, f0, 3)
-    env = np.sin(np.pi * np.clip(t / dur, 0, 1)) ** 0.7
-    return voice * env
-
-
 def loop_swamp(n):
     out = np.zeros((n, 2))
-    for _ in range(5):
-        f0 = R().uniform(250, 600)
-        formant = R().uniform(700, 1500)
-        period = R().uniform(1.8, 4.5)
-        trk = np.zeros(n)
-        count = max(1, int(round(n / SR / period)))
-        for i in range(count):
-            group = np.zeros(n_of(1.2))
-            k = int(R().integers(1, 4))
-            for j in range(k):
-                place(group, frog_croak(f0, formant, R().uniform(0.12, 0.25), R().uniform(35, 70)), j * 0.3)
-            if R().uniform() < 0.8:
-                c_place(trk, group * R().uniform(0.5, 1.0), (i + R().uniform(-0.2, 0.2)) * n / count)
-        dist = R().uniform(0, 0.7)
-        trk = c_filter(trk, h_lowpass(6000 - 3500 * dist))
-        out += pan(trk * (1 - 0.5 * dist), R().uniform(-0.9, 0.9))
-    # one deep bullfrog
-    trk = np.zeros(n)
-    for i in range(5):
-        c_place(trk, frog_croak(110, 230, R().uniform(0.5, 0.8), 22) * 1.3, (i + R().uniform(-0.3, 0.3)) * n / 5)
-    out += pan(trk, R().uniform(-0.5, 0.5))
-    for _ in range(12):
-        trk = cricket_track(n, R().uniform(3800, 5000), R().uniform(0.5, 1.2), R().uniform(0.06, 0.15),
-                            3, 0.012, 0.01, R().uniform(0.5, 1.0))
+    for _ in range(10):
+        trk = cricket_track(n, R().uniform(3400, 4400), R().uniform(0.7, 1.4), R().uniform(0.12, 0.3),
+                            3, 0.012, 0.012, R().uniform(0.6, 0.95))
         out += pan(trk, R().uniform(-1, 1))
-    ir = outdoor_ir()
-    out = np.stack([out[:, c] + 0.3 * c_reverb(out[:, c], ir[:, c]) for c in range(2)], axis=1)
-    wind, _ = wind_bed(n, 120, 1.0, gust_hz=0.06, intensity=0.3, floor=0.3, color="brown")
-    return out + wind * 0.6 * np.std(out) / (np.std(wind) + 1e-9)
+    wind, _ = wind_bed(n, 120, 1.0, gust_hz=0.06, intensity=0.3, floor=0.35, color="brown")
+    return out + wind * 0.9 * np.std(out) / (np.std(wind) + 1e-9)
 
 
 def loop_ocean(n):
@@ -270,102 +215,49 @@ def loop_desert(n):
     return wind + sand * 0.25 * np.std(wind) / (np.std(sand) + 1e-9)
 
 
-def whistle_layer(n, lo, hi, gust):
-    """Gentle tonal whistling made from very narrow noise bands crossfaded along a pitch curve."""
-    centers = [lo * 2 ** (k / 8) for k in range(int(np.log2(hi / lo) * 8) + 1)]
-    pitch = lo * 2 ** (np.log2(hi / lo) * c_curve(n, 0.05, smooth=1.3))
-    src = stereo_noise(n, "white", 0.6)
-    out = np.zeros((n, 2))
-    for fc in centers:
-        w = np.exp(-0.5 * ((np.log2(fc) - np.log2(pitch)) / 0.09) ** 2)
-        for c in range(2):
-            out[:, c] += c_filter(src[:, c], h_band(fc, 0.025)) * w
-    return out * (gust ** 2)[:, None]
-
-
 def loop_snow(n):
-    wind, g = wind_bed(n, 160, 1.8, gust_hz=0.08, intensity=0.9, floor=0.3)
-    wh = whistle_layer(n, 420, 950, g)
-    return wind + wh * 0.22 * np.std(wind) / (np.std(wh) + 1e-9)
+    wind, _ = wind_bed(n, 160, 1.6, gust_hz=0.07, intensity=0.8, floor=0.3)
+    return wind
 
 
 def loop_mountain(n):
-    wind, g = wind_bed(n, 110, 2.4, gust_hz=0.13, intensity=1.0, floor=0.2)
-    wh = whistle_layer(n, 300, 700, g)
-    return wind + wh * 0.15 * np.std(wind) / (np.std(wh) + 1e-9)
+    wind, _ = wind_bed(n, 120, 2.0, gust_hz=0.09, intensity=0.9, floor=0.25)
+    return wind
 
 
 def loop_cave(n):
-    deep = stereo_noise(n, "brown", 0.8)
-    deep = np.stack([c_filter(deep[:, c], h_lowpass(140, 2)) for c in range(2)], axis=1)
-    deep *= (0.75 + 0.25 * c_curve(n, 0.05))[:, None]
-    modes = np.zeros((n, 2))
-    for f in (63, 97, 151, 233):
-        for c in range(2):
-            modes[:, c] += c_filter(c_noise(n, "pink"), h_band(f, 0.04)) * R().uniform(0.5, 1.0)
+    """Almost silent: a faint, slowly moving draft of air. Caves should feel quiet, not threatening."""
     air = stereo_noise(n, "pink", 0.3)
-    air = np.stack([c_filter(air[:, c], h_bandpass(250, 900)) for c in range(2)], axis=1)
-    air *= (0.2 + 0.8 * c_curve(n, 0.04, smooth=1.5) ** 2)[:, None]
-    ir = make_ir(3.0, stereo=True, predelay=0.03, bright=3000, dark=800)
-    air = np.stack([air[:, c] * 0.4 + c_reverb(air[:, c], ir[:, c]) for c in range(2)], axis=1)
-    s = np.std(deep)
-    return deep + modes * 0.35 * s / np.std(modes) + air * 0.25 * s / np.std(air)
+    air = np.stack([c_filter(air[:, c], h_bandpass(180, 700)) for c in range(2)], axis=1)
+    air *= (0.35 + 0.65 * c_curve(n, 0.04, smooth=1.5) ** 2)[:, None]
+    return air
 
 
 def loop_nether(n):
-    rumble = stereo_noise(n, "brown", 0.8)
-    rumble = np.stack([c_filter(rumble[:, c], h_lowpass(110, 2)) for c in range(2)], axis=1)
     roar = stereo_noise(n, "pink", 0.5)
-    roar = np.stack([c_filter(roar[:, c], h_bandpass(140, 650)) for c in range(2)], axis=1)
-    flicker = 0.4 + 0.6 * c_curve(n, 6.0, min_hz=1.0, smooth=0.8)
-    roar *= (flicker * (0.3 + 0.7 * c_curve(n, 0.06, smooth=1.4)))[:, None]
-    t = t_axis(n)
-    drone = np.zeros(n)
-    for f, a in ((41.2, 1.0), (61.7, 0.6), (82.4, 0.35)):
-        f1, f2 = c_tone_freq(f, n), c_tone_freq(f + 0.13, n)
-        drone += a * (np.sin(2 * np.pi * f1 * t) + np.sin(2 * np.pi * f2 * t))
-    drone *= 0.6 + 0.4 * c_curve(n, 0.05)
+    roar = np.stack([c_filter(roar[:, c], h_bandpass(120, 500)) for c in range(2)], axis=1)
+    roar *= (0.5 + 0.5 * c_curve(n, 0.06, smooth=1.4))[:, None]
     bubbles = np.zeros((n, 2))
-    for _ in range(70):
-        dur = R().uniform(0.06, 0.18)
+    for _ in range(45):
+        dur = R().uniform(0.06, 0.16)
         bn = n_of(dur)
-        f0 = R().uniform(70, 220)
-        fcurve = f0 * (1 + 1.5 * t_axis(bn) / dur)
-        b = sweep_tone(fcurve, exp_env(bn, dur / 3, 0.004))
+        f0 = R().uniform(90, 220)
+        b = sweep_tone(f0 * (1 + 1.5 * t_axis(bn) / dur), exp_env(bn, dur / 3, 0.004))
         b += 0.3 * lp(white(bn), 900) * exp_env(bn, 0.01)
         tmp = np.zeros(n)
         c_place(tmp, b * R().uniform(0.3, 1.0), R().uniform(0, n))
         bubbles += pan(tmp, R().uniform(-0.8, 0.8))
-    crackle = np.zeros(n)
-    for _ in range(260):
-        cn = n_of(0.004)
-        c_place(crackle, bp(white(cn + 32), 1500, 5000, 1)[32:] * hann_env(cn) * R().lognormal(0, 0.8),
-                R().uniform(0, n))
-    crackle = pan(crackle, 0.0) * 0.7 + pan(np.roll(crackle, n // 3), 0.3) * 0.5
-    ir = make_ir(3.5, stereo=True, predelay=0.04, bright=2500, dark=600)
-    bubbles = np.stack([bubbles[:, c] + 1.2 * c_reverb(bubbles[:, c], ir[:, c]) for c in range(2)], axis=1)
-    s = np.std(rumble)
-    return (rumble + roar * 0.6 * s / np.std(roar) + pan(drone, 0) * 0.35 * s / np.std(drone)
-            + bubbles * 0.35 * s / np.std(bubbles) + crackle * 0.05 * s / np.std(crackle))
+    bubbles = np.stack([c_filter(bubbles[:, c], h_lowpass(1500)) for c in range(2)], axis=1)
+    s = np.std(roar)
+    return roar + bubbles * 0.3 * s / np.std(bubbles)
 
 
 def loop_end(n):
-    t = t_axis(n)
-    out = np.zeros((n, 2))
-    chord = (73.42, 110.0, 146.83, 174.61, 220.0, 329.63)
-    for i, f in enumerate(chord):
-        swell = c_curve(n, 0.04, smooth=1.5) ** 2
-        voice = np.zeros(n)
-        for det, a in ((0.0, 1.0), (0.21, 0.7), (-0.17, 0.5)):
-            ff = c_tone_freq(f + det, n)
-            voice += a * (np.sin(2 * np.pi * ff * t) + 0.2 * np.sin(2 * np.pi * 2 * ff * t))
-        out += pan(voice * swell / (1 + 0.4 * i), R().uniform(-0.7, 0.7))
+    """A very soft, airy hush (no tones or chords)."""
     air = stereo_noise(n, "pink", 0.2)
-    air = np.stack([c_filter(air[:, c], h_bandpass(1500, 5000)) for c in range(2)], axis=1)
-    air *= (0.2 + 0.8 * c_curve(n, 0.05, smooth=1.5) ** 2)[:, None]
-    ir = make_ir(5.0, stereo=True, predelay=0.06, bright=5000, dark=1500)
-    out = np.stack([out[:, c] * 0.5 + c_reverb(out[:, c], ir[:, c]) for c in range(2)], axis=1)
-    return out + air * 0.25 * np.std(out) / np.std(air)
+    air = np.stack([c_filter(air[:, c], h_bandpass(300, 2500)) for c in range(2)], axis=1)
+    air *= (0.4 + 0.6 * c_curve(n, 0.04, smooth=1.5) ** 2)[:, None]
+    return air
 
 
 def loop_underwater(n):
@@ -394,9 +286,9 @@ LOOPS = {
     "desert": (loop_desert, -25),
     "snow": (loop_snow, -24),
     "mountain": (loop_mountain, -23),
-    "cave": (loop_cave, -24),
+    "cave": (loop_cave, -28),
     "nether": (loop_nether, -22),
-    "end": (loop_end, -24),
+    "end": (loop_end, -28),
     "underwater": (loop_underwater, -22),
 }
 
@@ -491,27 +383,8 @@ def bird(kind):
             place(out, tone * a, pos)
             pos += d + 0.08
     out = hp(lp(out, 9000, 2), 400, 2) if kind != "dove" else lp(out, 4000, 2)
-    ir = make_ir(0.8, predelay=0.015, bright=6000, dark=2000, density=0.7)
-    return finish_oneshot(reverb(out, ir, 0.28), -3)
-
-
-def owl(variant):
-    out = np.zeros(n_of(4.0))
-    f0 = 330 * (1.0 + 0.08 * variant)
-    pattern = ((0.0, 0.42, 1.0), (0.75, 0.18, 0.7), (0.98, 0.2, 0.75), (1.3, 0.55, 0.9))
-    if variant == 1:
-        pattern = ((0.0, 0.5, 1.0), (0.85, 0.6, 0.85))
-    for start, d, a in pattern:
-        nn = n_of(d)
-        t = t_axis(nn)
-        f = f0 * (1.04 - 0.08 * t / d)
-        env = np.clip(np.minimum(t / 0.05, (d - t) / 0.14), 0, 1) ** 1.3
-        tone = sweep_tone(f, env, ((1, 1.0), (2, 0.18), (3, 0.04)))
-        tone += 0.12 * bp(white(nn), f0 * 0.8, f0 * 3.0, 1) * env
-        place(out, tone * a, 0.05 + start)
-    out = lp(out, 2500, 2)
-    ir = make_ir(1.6, predelay=0.03, bright=3500, dark=1200)
-    return finish_oneshot(reverb(out, ir, 0.4), -3)
+    ir = make_ir(0.5, predelay=0.015, bright=6000, dark=2000, density=0.7)
+    return finish_oneshot(reverb(out, ir, 0.15), -3)
 
 
 def woodpecker():
@@ -543,48 +416,8 @@ def cave_drip(variant):
         nn2 = n_of(dur * 0.7)
         place(out, 0.35 * sweep_tone(f0 * 1.3 * (1 + 1.2 * t_axis(nn2) / (dur * 0.7)),
                                     exp_env(nn2, dur / 4, 0.001)), 0.09)
-    ir = make_ir(2.8, predelay=0.025, bright=4000, dark=1000)
-    return finish_oneshot(reverb(out, ir, 1.4, 0.6), -3)
-
-
-def rumble(dark):
-    dur = R().uniform(5, 7)
-    nn = n_of(dur)
-    t = t_axis(nn)
-    env = np.clip(t / 1.8, 0, 1) ** 2 * np.exp(-np.clip(t - 1.8, 0, None) / 1.4)
-    x = lp(brown(nn), 90 if dark else 140, 2) * env
-    x += 0.15 * bp(pink(nn), 200, 600, 2) * env * smooth_rand(nn, 12, 0, 1) ** 2
-    ir = make_ir(3.0, predelay=0.04, bright=1500, dark=500)
-    return finish_oneshot(reverb(x, ir, 0.8), -4)
-
-
-def gust(stereo_leaves):
-    dur = R().uniform(4.5, 6.5)
-    nn = n_of(dur)
-    t = t_axis(nn)
-    env = np.sin(np.pi * np.clip(t / dur, 0, 1)) ** 1.8
-    peak = R().uniform(0.4, 0.6)
-    shape = np.where(t < peak * dur, (t / (peak * dur)), (dur - t) / ((1 - peak) * dur))
-    chans = []
-    p0, p1 = R().uniform(-0.8, 0.8), R().uniform(-0.8, 0.8)
-    pn = p0 + (p1 - p0) * t / dur
-    for c in range(2):
-        src = pink(nn)
-        if stereo_leaves:
-            rate = (200 + 4000 * env ** 1.5) * (0.5 + 0.5 * smooth_rand(nn, 9, 0, 1))
-            mask = R().uniform(0, 1, nn) < rate / SR
-            imp = np.zeros(nn)
-            imp[mask] = R().lognormal(0, 0.5, int(mask.sum())) * R().choice([-1.0, 1.0], int(mask.sum()))
-            crackle = bp(imp, 900, 5500, 2)
-            body = bp(src, 180, 700, 2) * 0.6 + crackle / (np.std(crackle) + 1e-9) * np.std(src) * 0.35
-        else:
-            body = np.zeros(nn)
-            for fc in (200, 300, 450, 680, 1000, 1500):
-                w = np.exp(-0.5 * ((np.log2(fc) - np.log2(220 * 2 ** (2.2 * shape))) / 0.6) ** 2)
-                body += bp(src, fc / 1.3, fc * 1.3, 1) * w
-        side = np.cos((pn + 1) * np.pi / 4) if c == 0 else np.sin((pn + 1) * np.pi / 4)
-        chans.append(body * env * side)
-    return finish_oneshot(np.stack(chans, axis=1), -4)
+    ir = make_ir(1.4, predelay=0.02, bright=4000, dark=1200)
+    return finish_oneshot(reverb(out, ir, 0.5), -3)
 
 
 def lava_pop():
@@ -603,35 +436,16 @@ def lava_pop():
     return finish_oneshot(reverb(out, ir, 0.7), -3)
 
 
-def end_shimmer():
-    out = np.zeros(n_of(1.0))
-    scale = [440.0, 523.25, 587.33, 659.26, 783.99, 880.0, 1046.5]
-    for i in range(int(R().integers(2, 5))):
-        f = scale[int(R().integers(0, len(scale)))]
-        nn = n_of(0.9)
-        tone = modal(nn, [f, f * 2.01, f * 3.03], [0.6, 0.3, 0.15], [1, 0.25, 0.08])
-        place(out, tone * R().uniform(0.5, 1.0), i * R().uniform(0.15, 0.3))
-    ir = make_ir(5.0, stereo=True, predelay=0.05, bright=6000, dark=2000)
-    return finish_oneshot(reverb(out, ir, 1.5, 0.4), -5)
-
-
 def build_ambient_oneshots():
     dsp.seed(101)
     files = []
-    for kind in ("descending", "trill", "feebee", "warble", "chirps", "robin"):
-        for v in range(2):
+    for kind in ("descending", "feebee", "chirps"):
+        for v in range(3):
             files.append(save("ambient/bird/%s%d" % (kind, v + 1), bird(kind)))
     register("ambient.bird", "ambient", files)
-    register("ambient.dove", "ambient", [save("ambient/bird/dove%d" % (v + 1), bird("dove")) for v in range(2)])
-    register("ambient.owl", "ambient", [save("ambient/owl%d" % (v + 1), owl(v)) for v in range(2)])
     register("ambient.woodpecker", "ambient", [save("ambient/woodpecker%d" % (v + 1), woodpecker()) for v in range(2)])
     register("ambient.drip", "ambient", [save("ambient/cave/drip%d" % (v + 1), cave_drip(v)) for v in range(6)])
-    register("ambient.cave_rumble", "ambient", [save("ambient/cave/rumble%d" % (v + 1), rumble(False)) for v in range(2)])
-    register("ambient.wind_gust", "ambient", [save("ambient/wind/gust%d" % (v + 1), gust(False)) for v in range(3)])
-    register("ambient.leaves_gust", "ambient", [save("ambient/wind/leaves%d" % (v + 1), gust(True)) for v in range(3)])
     register("ambient.lava_pop", "ambient", [save("ambient/nether/lava%d" % (v + 1), lava_pop()) for v in range(4)])
-    register("ambient.nether_rumble", "ambient", [save("ambient/nether/rumble%d" % (v + 1), rumble(True)) for v in range(2)])
-    register("ambient.end_shimmer", "ambient", [save("ambient/end/shimmer%d" % (v + 1), end_shimmer()) for v in range(3)])
     print("ambient one-shots")
 
 
@@ -640,10 +454,11 @@ def build_ambient_oneshots():
 # =====================================================================================
 
 def heel(nn, f=85, amp=1.0, decay=0.025, noise_lp=350):
+    """Soft contact of a shoe: mostly filtered noise, only a hint of low body (no booming sine)."""
     t = t_axis(nn)
-    thump = np.sin(2 * np.pi * f * (1 - 0.3 * np.clip(t / 0.05, 0, 1)) * t) * exp_env(nn, decay, 0.002)
-    thump += 0.8 * lp(white(nn), noise_lp, 2) * exp_env(nn, decay * 0.6, 0.001)
-    return thump * amp
+    thump = 0.25 * np.sin(2 * np.pi * f * 1.6 * t) * exp_env(nn, decay * 0.5, 0.003)
+    thump += lp(white(nn), noise_lp * 1.8, 2) * exp_env(nn, decay * 0.5, 0.0015)
+    return hp(thump, 70, 2) * amp * 0.6
 
 
 def step(material):
@@ -781,14 +596,10 @@ def jump():
 
 
 def land(hard):
-    nn = n_of(0.6)
-    out = heel(nn, 60 if hard else 70, 1.0, 0.06 if hard else 0.04, 300)
-    out += (0.6 if hard else 0.4) * bp(white(nn), 250, 1800, 2) * ar_env(nn, 0.005, 0.07)
-    if hard:
-        out += 0.6 * lp(brown(nn), 120, 2) * exp_env(nn, 0.12, 0.003)
-        for _ in range(int(R().integers(3, 8))):
-            pn = n_of(0.06)
-            place(out, 0.1 * modal(pn, [R().uniform(1200, 4000)], [0.015], [1]), R().uniform(0.01, 0.12))
+    """Body and clothes settling after a jump: a soft cloth flop, the floor itself comes from the block sound."""
+    nn = n_of(0.4)
+    out = heel(nn, 90, 0.6, 0.03, 400)
+    out += (0.8 if hard else 0.6) * bp(pink(nn), 300, 2200, 2) * ar_env(nn, 0.008, 0.06 if hard else 0.045)
     return lp(out, 5000)
 
 
@@ -801,9 +612,9 @@ def build_movement():
         files = [save("armor/%s%d" % (kind, v + 1), finish_oneshot(armor(kind), peak)) for v in range(4)]
         register("armor." + kind, "player", files)
     register("movement.jump", "player", [save("movement/jump%d" % (v + 1), finish_oneshot(jump(), -6)) for v in range(4)])
-    register("movement.land", "player", [save("movement/land%d" % (v + 1), finish_oneshot(land(False), -3)) for v in range(4)])
+    register("movement.land", "player", [save("movement/land%d" % (v + 1), finish_oneshot(land(False), -6)) for v in range(4)])
     register("movement.land_hard", "player",
-             [save("movement/land_hard%d" % (v + 1), finish_oneshot(land(True), -1.5)) for v in range(3)])
+             [save("movement/land_hard%d" % (v + 1), finish_oneshot(land(True), -4)) for v in range(3)])
     print("movement")
 
 
@@ -840,7 +651,8 @@ def equip(kind):
         ring = np.zeros(nn)
         for fr, d, a in ((1180, 0.8, 1.0), (2960, 0.5, 0.55), (5080, 0.3, 0.3), (7350, 0.15, 0.15)):
             ring += modal(nn, [fr * f, fr * f * 1.003], [d, d], [a, a * 0.7])
-        place(out, 0.4 * ring / (np.max(np.abs(ring)) + 1e-9), sd)
+        ring *= exp_env(nn, 0.25)
+        place(out, 0.25 * ring / (np.max(np.abs(ring)) + 1e-9), sd)
         return lp(out, 8500)
     if kind == "heavy":
         nn = n_of(0.8)

@@ -28,19 +28,19 @@ public class AmbientEngine {
 
     private enum Layer {
 
-        PLAINS_WIND("plains", 0.50f),
-        FOREST_LEAVES("forest", 0.55f),
-        NIGHT_CRICKETS("night", 0.40f),
-        JUNGLE_INSECTS("jungle", 0.45f),
-        SWAMP_FROGS("swamp", 0.50f),
-        OCEAN_WAVES("ocean", 0.65f),
-        DESERT_WIND("desert", 0.45f),
-        SNOW_WIND("snow", 0.50f),
-        MOUNTAIN_WIND("mountain", 0.55f),
-        CAVE("cave", 0.60f),
-        NETHER("nether", 0.65f),
-        END("end", 0.50f),
-        UNDERWATER("underwater", 0.55f);
+        PLAINS_WIND("plains", 0.40f),
+        FOREST_LEAVES("forest", 0.42f),
+        NIGHT_CRICKETS("night", 0.25f),
+        JUNGLE_INSECTS("jungle", 0.30f),
+        SWAMP_FROGS("swamp", 0.30f),
+        OCEAN_WAVES("ocean", 0.50f),
+        DESERT_WIND("desert", 0.35f),
+        SNOW_WIND("snow", 0.38f),
+        MOUNTAIN_WIND("mountain", 0.40f),
+        CAVE("cave", 0.30f),
+        NETHER("nether", 0.45f),
+        END("end", 0.30f),
+        UNDERWATER("underwater", 0.40f);
 
         final ResourceLocation sound;
         final float gain;
@@ -52,25 +52,25 @@ public class AmbientEngine {
     }
 
     private static final Layer[] LAYERS = Layer.values();
-    private static final int START_GRACE_TICKS = 60;
-    private static final int RESTART_COOLDOWN_TICKS = 100;
+    private static final int START_GRACE_TICKS = 100;
+    private static final int HEALTH_CHECK_TICKS = 20;
+    /** A streamed sound may briefly report "not playing" while buffering: only restart after this many checks. */
+    private static final int DEAD_CHECKS = 5;
+    private static final int RESTART_COOLDOWN_TICKS = 400;
+    private static final float START_THRESHOLD = 0.05f;
+    /** Layers already playing are preferred when ranking, so two similar layers do not keep swapping. */
+    private static final float PLAYING_BONUS = 1.6f;
 
     private static final ResourceLocation BIRD = Sounds.of("ambient.bird");
-    private static final ResourceLocation DOVE = Sounds.of("ambient.dove");
-    private static final ResourceLocation OWL = Sounds.of("ambient.owl");
     private static final ResourceLocation WOODPECKER = Sounds.of("ambient.woodpecker");
     private static final ResourceLocation DRIP = Sounds.of("ambient.drip");
-    private static final ResourceLocation CAVE_RUMBLE = Sounds.of("ambient.cave_rumble");
-    private static final ResourceLocation WIND_GUST = Sounds.of("ambient.wind_gust");
-    private static final ResourceLocation LEAVES_GUST = Sounds.of("ambient.leaves_gust");
     private static final ResourceLocation LAVA_POP = Sounds.of("ambient.lava_pop");
-    private static final ResourceLocation NETHER_RUMBLE = Sounds.of("ambient.nether_rumble");
-    private static final ResourceLocation END_SHIMMER = Sounds.of("ambient.end_shimmer");
 
     private final Environment env = new Environment();
     private final LoopSound[] playing = new LoopSound[LAYERS.length];
     private final int[] age = new int[LAYERS.length];
     private final int[] cooldown = new int[LAYERS.length];
+    private final int[] deadChecks = new int[LAYERS.length];
     private final float[] target = new float[LAYERS.length];
     private final Integer[] order = new Integer[LAYERS.length];
 
@@ -147,7 +147,7 @@ public class AmbientEngine {
     /** Streaming channels are limited, so only the most important layers are allowed to play. */
     private void keepLoudest(int max) {
         for (int i = 0; i < order.length; i++) order[i] = i;
-        Arrays.sort(order, Comparator.comparingDouble(i -> -target[i]));
+        Arrays.sort(order, Comparator.comparingDouble(i -> -target[i] * (playing[i] != null ? PLAYING_BONUS : 1.0f)));
         for (int rank = max; rank < order.length; rank++) {
             target[order[rank]] = 0;
         }
@@ -161,20 +161,25 @@ public class AmbientEngine {
                 age[i]++;
                 if (sound.isDonePlaying()) {
                     playing[i] = null;
-                } else if (age[i] > START_GRACE_TICKS && !handler.isSoundPlaying(sound)) {
-                    // the sound system dropped it (resource reload, device change...): try again later
-                    sound.kill();
-                    playing[i] = null;
-                    cooldown[i] = RESTART_COOLDOWN_TICKS;
+                } else if (age[i] > START_GRACE_TICKS && age[i] % HEALTH_CHECK_TICKS == 0) {
+                    deadChecks[i] = handler.isSoundPlaying(sound) ? 0 : deadChecks[i] + 1;
+                    if (deadChecks[i] >= DEAD_CHECKS) {
+                        // the sound system really dropped it (resource reload, device change...): try again later
+                        sound.kill();
+                        handler.stopSound(sound);
+                        playing[i] = null;
+                        cooldown[i] = RESTART_COOLDOWN_TICKS;
+                    }
                 }
             } else if (cooldown[i] > 0) {
                 cooldown[i]--;
-            } else if (target[i] > 0.02f) {
+            } else if (target[i] > START_THRESHOLD) {
                 sound = new LoopSound(LAYERS[i].sound);
                 sound.setTarget(target[i]);
                 handler.playSound(sound);
                 playing[i] = sound;
                 age[i] = 0;
+                deadChecks[i] = 0;
             }
         }
     }
@@ -183,36 +188,23 @@ public class AmbientEngine {
 
     private void randomEvents(EntityPlayer player) {
         if (env.nether) {
-            maybePositional(player, LAVA_POP, 1.0f, 7, 0.55f, 4, 12, -2, 3);
-            maybeGlobal(NETHER_RUMBLE, 1.0f, 55, 0.35f);
+            maybePositional(player, LAVA_POP, 1.0f, 10, 0.45f, 5, 12, -2, 3);
             return;
         }
-        if (env.end) {
-            maybeGlobal(END_SHIMMER, 1.0f, 28, 0.25f);
-            return;
-        }
-        if (env.underwater) return;
+        if (env.end || env.underwater) return;
 
         float surface = 1.0f - env.cave;
         float open = env.outdoor * surface;
         float dry = 1.0f - env.rain;
-        float night = 1.0f - env.day;
         float low = 1.0f - env.altitude;
         float plains = env.get(PLAINS), forest = env.get(FOREST), jungle = env.get(JUNGLE);
         float woods = forest + jungle;
 
-        float birds = (woods + 0.5f * plains + 0.2f * env.get(SWAMP)) * env.day * dry * open * low;
-        maybePositional(player, BIRD, birds, 6, 0.75f, 6, 14, 3, 9);
-        maybePositional(player, DOVE, (plains + forest) * env.day * dry * open * low, 45, 0.55f, 8, 14, 2, 6);
-        maybePositional(player, WOODPECKER, forest * env.day * dry * open, 70, 0.6f, 8, 14, 2, 6);
-        maybePositional(player, OWL, (forest + 0.3f * plains) * night * dry * open, 40, 0.6f, 8, 14, 3, 8);
+        float birds = (woods + 0.5f * plains) * env.day * dry * open * low;
+        maybePositional(player, BIRD, birds, 12, 0.5f, 7, 14, 3, 9);
+        maybePositional(player, WOODPECKER, forest * env.day * dry * open, 120, 0.45f, 8, 14, 2, 6);
 
-        float windy = plains + env.get(DESERT) + env.get(SNOW) + env.get(MOUNTAIN) + env.altitude;
-        maybeGlobal(WIND_GUST, Math.min(1.0f, windy) * open * (1.0f + env.rain), 35, 0.35f);
-        maybeGlobal(LEAVES_GUST, woods * open * (1.0f + env.rain), 28, 0.3f);
-
-        maybePositional(player, DRIP, env.cave, 4, 0.7f, 3, 10, 0, 4);
-        maybeGlobal(CAVE_RUMBLE, env.cave, 100, 0.4f);
+        maybePositional(player, DRIP, env.cave, 8, 0.5f, 4, 10, 0, 4);
     }
 
     /** Fires on average every {@code meanSeconds} seconds when {@code weight} is 1. */
@@ -220,13 +212,6 @@ public class AmbientEngine {
         if (weight <= 0.01f) return false;
         float chance = weight * Config.ambientEventFrequency / (meanSeconds * 20.0f);
         return Sounds.RANDOM.nextFloat() < chance;
-    }
-
-    private void maybeGlobal(ResourceLocation sound, float weight, float meanSeconds, float volume) {
-        if (roll(weight, meanSeconds)) {
-            float v = volume * Math.min(1.0f, 0.5f + 0.5f * weight) * Config.ambientVolume;
-            Sounds.playGlobal(sound, Sounds.vary(v, v * 0.2f), Sounds.vary(1.0f, 0.06f));
-        }
     }
 
     private void maybePositional(EntityPlayer player, ResourceLocation sound, float weight, float meanSeconds,

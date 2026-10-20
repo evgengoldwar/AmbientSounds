@@ -11,6 +11,7 @@ import ambientsounds.Config;
 import ambientsounds.client.ambient.AmbientEngine;
 import ambientsounds.client.equip.EquipSounds;
 import ambientsounds.client.movement.FootstepEngine;
+import ambientsounds.client.sound.OneShotSound;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 
@@ -46,7 +47,9 @@ public class ClientEvents {
     /** Mutes vanilla step sounds of the local player, the mod plays its own material aware ones instead. */
     @SubscribeEvent
     public void onPlaySound(PlaySoundEvent17 event) {
-        if (!Config.footstepsEnabled || !Config.replaceVanillaFootsteps || event.sound == null) return;
+        if (!Config.footstepsEnabled || !Config.customFootsteps || event.sound == null) return;
+        // block sounds the mod itself plays for jumps and landings
+        if (event.sound instanceof OneShotSound) return;
         ResourceLocation location = event.sound.getPositionedSoundLocation();
         if (!"minecraft".equals(location.getResourceDomain()) || !location.getResourcePath()
             .startsWith("step.")) {

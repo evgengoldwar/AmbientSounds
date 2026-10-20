@@ -4,30 +4,13 @@
     "sounds": [
       "ambientsounds:ambient/bird/descending1",
       "ambientsounds:ambient/bird/descending2",
-      "ambientsounds:ambient/bird/trill1",
-      "ambientsounds:ambient/bird/trill2",
+      "ambientsounds:ambient/bird/descending3",
       "ambientsounds:ambient/bird/feebee1",
       "ambientsounds:ambient/bird/feebee2",
-      "ambientsounds:ambient/bird/warble1",
-      "ambientsounds:ambient/bird/warble2",
+      "ambientsounds:ambient/bird/feebee3",
       "ambientsounds:ambient/bird/chirps1",
       "ambientsounds:ambient/bird/chirps2",
-      "ambientsounds:ambient/bird/robin1",
-      "ambientsounds:ambient/bird/robin2"
-    ]
-  },
-  "ambient.cave_rumble": {
-    "category": "ambient",
-    "sounds": [
-      "ambientsounds:ambient/cave/rumble1",
-      "ambientsounds:ambient/cave/rumble2"
-    ]
-  },
-  "ambient.dove": {
-    "category": "ambient",
-    "sounds": [
-      "ambientsounds:ambient/bird/dove1",
-      "ambientsounds:ambient/bird/dove2"
+      "ambientsounds:ambient/bird/chirps3"
     ]
   },
   "ambient.drip": {
@@ -41,14 +24,6 @@
       "ambientsounds:ambient/cave/drip6"
     ]
   },
-  "ambient.end_shimmer": {
-    "category": "ambient",
-    "sounds": [
-      "ambientsounds:ambient/end/shimmer1",
-      "ambientsounds:ambient/end/shimmer2",
-      "ambientsounds:ambient/end/shimmer3"
-    ]
-  },
   "ambient.lava_pop": {
     "category": "ambient",
     "sounds": [
@@ -56,14 +31,6 @@
       "ambientsounds:ambient/nether/lava2",
       "ambientsounds:ambient/nether/lava3",
       "ambientsounds:ambient/nether/lava4"
-    ]
-  },
-  "ambient.leaves_gust": {
-    "category": "ambient",
-    "sounds": [
-      "ambientsounds:ambient/wind/leaves1",
-      "ambientsounds:ambient/wind/leaves2",
-      "ambientsounds:ambient/wind/leaves3"
     ]
   },
   "ambient.loop.cave": {
@@ -181,28 +148,6 @@
         "name": "ambientsounds:ambient/loop/underwater",
         "stream": true
       }
-    ]
-  },
-  "ambient.nether_rumble": {
-    "category": "ambient",
-    "sounds": [
-      "ambientsounds:ambient/nether/rumble1",
-      "ambientsounds:ambient/nether/rumble2"
-    ]
-  },
-  "ambient.owl": {
-    "category": "ambient",
-    "sounds": [
-      "ambientsounds:ambient/owl1",
-      "ambientsounds:ambient/owl2"
-    ]
-  },
-  "ambient.wind_gust": {
-    "category": "ambient",
-    "sounds": [
-      "ambientsounds:ambient/wind/gust1",
-      "ambientsounds:ambient/wind/gust2",
-      "ambientsounds:ambient/wind/gust3"
     ]
   },
   "ambient.woodpecker": {

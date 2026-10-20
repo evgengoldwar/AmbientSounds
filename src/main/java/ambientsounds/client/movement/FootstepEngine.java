@@ -19,7 +19,7 @@ import ambientsounds.client.sound.Sounds;
 public class FootstepEngine {
 
     private static final float STRIDE = 1.0f;
-    private static final float BASE_STEP_VOLUME = 0.3f;
+    private static final float BASE_STEP_VOLUME = 0.22f;
 
     private static final ResourceLocation JUMP = Sounds.of("movement.jump");
     private static final ResourceLocation LAND = Sounds.of("movement.land");
@@ -101,7 +101,8 @@ public class FootstepEngine {
     }
 
     private void step(World world, EntityPlayer player, float loudness, boolean climbing) {
-        StepMaterial material = climbing ? climbMaterial(world, player) : floorMaterial(world, player);
+        Block floor = climbing ? null : floorBlock(world, player, 0.2);
+        StepMaterial material = climbing ? climbMaterial(world, player) : (floor == null ? null : materialOf(world, player, floor));
         if (material == null) return;
 
         float volume = BASE_STEP_VOLUME * loudness * material.gain * Config.footstepVolume;
@@ -111,38 +112,50 @@ public class FootstepEngine {
             volume *= 1.25f;
             pitch += 0.03f;
         }
-        if (player.isInWater()) material = StepMaterial.WADE;
-        playAtFeet(player, material.sound, volume, pitch);
+        if (player.isInWater()) {
+            playAtFeet(player, StepMaterial.WADE.sound, volume, pitch);
+        } else if (Config.customFootsteps) {
+            playAtFeet(player, material.sound, volume, pitch);
+        }
+        // otherwise the vanilla step (a real recording) plays and the layers below are added to it
 
         if (!climbing && feetInFoliage(world, player) && material != StepMaterial.LEAVES) {
-            playAtFeet(player, StepMaterial.LEAVES.sound, volume * 0.5f, Sounds.vary(1.1f, 0.08f));
+            playAtFeet(player, StepMaterial.LEAVES.sound, volume * 0.4f, Sounds.vary(1.1f, 0.08f));
         }
         if (Config.armorSounds && !player.isSneaking()) {
             ResourceLocation armor = armorSound(player);
             if (armor != null) {
-                float av = 0.22f * loudness * Config.armorVolume * (player.isSprinting() ? 1.3f : 1.0f);
+                float av = 0.18f * loudness * Config.armorVolume * (player.isSprinting() ? 1.3f : 1.0f);
                 playAtFeet(player, armor, av, Sounds.vary(1.0f, 0.08f));
             }
         }
     }
 
     private void jump(World world, EntityPlayer player) {
-        float v = 0.25f * Config.jumpLandVolume;
-        playAtFeet(player, JUMP, v, Sounds.vary(1.0f, 0.08f));
-        StepMaterial material = floorMaterialBelow(world, player, 0.6);
-        if (material != null && Config.footstepsEnabled) {
-            playAtFeet(player, material.sound, BASE_STEP_VOLUME * 0.6f * Config.footstepVolume, Sounds.vary(1.1f, 0.05f));
-        }
+        playAtFeet(player, JUMP, 0.18f * Config.jumpLandVolume, Sounds.vary(1.0f, 0.08f));
+        Block floor = floorBlock(world, player, 0.6);
+        if (floor != null) blockSound(floor, 0.12f * Config.jumpLandVolume, 1.1f);
     }
 
     private void land(World world, EntityPlayer player, float fall) {
-        boolean hard = fall > 3.5f;
-        // stepping down a single block only makes a firmer step, real jumps and falls also thump
+        Block floor = floorBlock(world, player, 0.2);
+        // stepping down a single block only makes a normal step, real jumps and falls land audibly
         if (fall > 1.1f) {
-            float v = Math.min(0.9f, 0.3f + fall * 0.06f) * Config.jumpLandVolume;
-            playAtFeet(player, hard ? LAND_HARD : LAND, v, Sounds.vary(hard ? 0.95f : 1.0f, 0.06f));
+            boolean hard = fall > 3.5f;
+            float v = Math.min(0.6f, 0.25f + fall * 0.04f) * Config.jumpLandVolume;
+            playAtFeet(player, hard ? LAND_HARD : LAND, v, Sounds.vary(1.0f, 0.06f));
+            if (floor != null) blockSound(floor, Math.min(0.45f, 0.2f + fall * 0.03f) * Config.jumpLandVolume, 0.8f);
+        } else if (floor != null && Config.customFootsteps && Config.footstepsEnabled) {
+            step(world, player, 1.1f, false);
         }
-        if (Config.footstepsEnabled) step(world, player, Math.min(1.8f, 1.2f + fall * 0.05f), false);
+    }
+
+    /** The block's own (vanilla or modded) step recording, used for the floor part of jumps and landings. */
+    private static void blockSound(Block block, float volume, float pitch) {
+        Block.SoundType type = block.stepSound;
+        if (type == null) return;
+        Sounds.playGlobal(new ResourceLocation(type.getStepResourcePath()), volume * type.getVolume(),
+            Sounds.vary(pitch * type.getPitch(), 0.05f));
     }
 
     private static void playAtFeet(EntityPlayer player, ResourceLocation sound, float volume, float pitch) {
@@ -150,20 +163,18 @@ public class FootstepEngine {
         Sounds.playGlobal(sound, volume, pitch);
     }
 
-    private static StepMaterial floorMaterial(World world, EntityPlayer player) {
-        return floorMaterialBelow(world, player, 0.2);
+    private static StepMaterial materialOf(World world, EntityPlayer player, Block floor) {
+        // a snow layer or carpet at feet level wins over the block below
+        Block atFeet = world.getBlock(
+            MathHelper.floor_double(player.posX),
+            MathHelper.floor_double(player.boundingBox.minY + 0.01),
+            MathHelper.floor_double(player.posZ));
+        StepMaterial overlay = StepMaterial.overlay(atFeet);
+        return overlay != null ? overlay : StepMaterial.of(floor);
     }
 
-    private static StepMaterial floorMaterialBelow(World world, EntityPlayer player, double below) {
-        double feet = player.boundingBox.minY;
-        int y = MathHelper.floor_double(feet - below);
-        int feetY = MathHelper.floor_double(feet + 0.01);
-
-        // a snow layer or carpet at feet level wins over the block below
-        Block atFeet = world.getBlock(MathHelper.floor_double(player.posX), feetY, MathHelper.floor_double(player.posZ));
-        StepMaterial overlay = StepMaterial.overlay(atFeet);
-        if (overlay != null) return overlay;
-
+    private static Block floorBlock(World world, EntityPlayer player, double below) {
+        int y = MathHelper.floor_double(player.boundingBox.minY - below);
         // check every block column the player stands on, so edges of blocks still make sound
         int[] xs = { MathHelper.floor_double(player.posX), MathHelper.floor_double(player.boundingBox.minX + 0.01),
             MathHelper.floor_double(player.boundingBox.maxX - 0.01) };
@@ -174,12 +185,12 @@ public class FootstepEngine {
                 Block block = world.getBlock(x, y, z);
                 if (block.getMaterial() != Material.air && !block.getMaterial()
                     .isLiquid()) {
-                    return StepMaterial.of(block);
+                    return block;
                 }
                 // fences and walls are taller than one block
                 Block below2 = world.getBlock(x, y - 1, z);
                 int render = below2.getRenderType();
-                if (render == 11 || render == 21 || render == 32) return StepMaterial.of(below2);
+                if (render == 11 || render == 21 || render == 32) return below2;
             }
         }
         return null;
